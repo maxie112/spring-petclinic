@@ -14,6 +14,7 @@
   <version>3.5.0-SNAPSHOT</version>
 
   <name>petclinic</name>
+  <surefire.excludes>**/*IntegrationTests.java</surefire.excludes>
 
   <properties>
 

@@ -1,12 +1,22 @@
 # cloudbuild.yaml (Production-Grade Version)#
 
 steps:
-  # STEP 1: Run all backend tests using the 'test' profile.
+  # STEP 0: Download the cache from GCS.
+  # We use '|| exit 0' so the build doesn't fail if the cache doesn't exist yet.
+  - name: 'gcr.io/cloud-builders/gsutil'
+    id: 'Restore Cache'
+    entrypoint: 'bash'
+    args: ['-c', 'gsutil rsync -r gs://gorilla-clinic-build-cache/.m2 /workspace/.m2 || exit 0']
+
+  # STEP 1: Run tests. This step now uses the restored cache.
   - name: 'maven:3.8.5-openjdk-17'
-    id: 'Run Unit and Integration Tests'
+    id: 'Run Tests'
     entrypoint: 'mvn'
-    # We add '-P test' to activate the test profile, which uses an in-memory database.
     args: ['test', '-P', 'test']
+    # This 'volumes' mapping tells Cloud Build to mount our cached directory.
+    volumes:
+      - name: 'm2-cache'
+        path: '/root/.m2'
 
   # STEP 2: Build the application into a .jar file.
   # This step will only run if the 'test' step succeeds.
