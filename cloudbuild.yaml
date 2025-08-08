@@ -10,7 +10,7 @@ steps:
 
   # STEP 1: Run tests. This step now uses the restored cache.
   - name: 'maven:3.8.5-openjdk-17'
-    id: 'Run Tests'
+    id: 'Run Unit and Integration Tests'
     entrypoint: 'mvn'
     args: ['test', '-P', 'test']
     # This 'volumes' mapping tells Cloud Build to mount our cached directory.

@@ -14,7 +14,6 @@
   <version>3.5.0-SNAPSHOT</version>
 
   <name>petclinic</name>
-  <surefire.excludes>**/*IntegrationTests.java</surefire.excludes>
 
   <properties>
 
@@ -37,6 +36,8 @@
     <maven-checkstyle.version>3.6.0</maven-checkstyle.version>
     <nohttp-checkstyle.version>0.0.11</nohttp-checkstyle.version>
     <spring-format.version>0.0.46</spring-format.version>
+
+    <surefire.excludes>**/*IntegrationTests.java</surefire.excludes>
 
   </properties>
 
