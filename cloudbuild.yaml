@@ -1,12 +1,12 @@
 # cloudbuild.yaml (Production-Grade Version)#
 
 steps:
-  # STEP 1: Run all backend tests as a quality gate.
-  # The 'id' allows other steps to wait for this one to complete.
+  # STEP 1: Run all backend tests using the 'test' profile.
   - name: 'maven:3.8.5-openjdk-17'
     id: 'Run Unit and Integration Tests'
     entrypoint: 'mvn'
-    args: ['test'] # 'test' goal compiles and runs all tests.
+    # We add '-P test' to activate the test profile, which uses an in-memory database.
+    args: ['test', '-P', 'test']
 
   # STEP 2: Build the application into a .jar file.
   # This step will only run if the 'test' step succeeds.
