@@ -32,6 +32,9 @@ steps:
     id: 'Build Container Image'
     args: ['build', '-t', '$_REGION-docker.pkg.dev/$_PROJECT_ID_TO_DEPLOY_TO/gorilla-clinic-repo/$_SERVICE_NAME:$COMMIT_SHA', '.']
     wait_for: ['Build Application']
+    volumes:
+      - name: 'm2-cache'
+        path: '/root/.m2'
 
   # STEP 4: Push the container image to Artifact Registry.
   - name: 'gcr.io/cloud-builders/docker'
