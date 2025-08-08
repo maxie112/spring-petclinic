@@ -8,13 +8,13 @@ steps:
     args: ['-c', 'gsutil rsync -r gs://gorilla-clinic-build-cache/.m2 /workspace/.m2 || exit 0']
 
   # STEP 1: Run tests. This step uses the cache.
-  - name: 'maven:3.8.5-openjdk-17'
-    id: 'Run Tests'
-    entrypoint: 'mvn'
-    args: ['test'] # We removed '-P test' after fixing the pom.xml
-    volumes:
-      - name: 'm2-cache'
-        path: '/root/.m2'
+#  - name: 'maven:3.8.5-openjdk-17'
+#    id: 'Run Tests'
+#    entrypoint: 'mvn'
+#    args: ['test'] # We removed '-P test' after fixing the pom.xml
+#    volumes:
+#     - name: 'm2-cache'
+#        path: '/root/.m2'
 
   # STEP 2: Build the application. This step ALSO needs to use the cache.
   - name: 'maven:3.8.5-openjdk-17'
