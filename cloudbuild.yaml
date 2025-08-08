@@ -1,0 +1,49 @@
+# cloudbuild.yaml (Production-Grade Version)#
+
+steps:
+  # STEP 1: Run all backend tests as a quality gate.
+  # The 'id' allows other steps to wait for this one to complete.
+  - name: 'maven:3.8.5-openjdk-17'
+    id: 'Run Unit and Integration Tests'
+    entrypoint: 'mvn'
+    args: ['test'] # 'test' goal compiles and runs all tests.
+
+  # STEP 2: Build the application into a .jar file.
+  # This step will only run if the 'test' step succeeds.
+  - name: 'maven:3.8.5-openjdk-17'
+    id: 'Build Application'
+    entrypoint: 'mvn'
+    args: ['package', '-DskipTests'] # We can skip tests here because we just ran them.
+    wait_for: ['Run Unit and Integration Tests'] # Explicitly wait for tests to pass.
+
+  # STEP 3: Build the production container image using the .jar from the previous step!
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Build Container Image'
+    args: ['build', '-t', '$_REGION-docker.pkg.dev/$_PROJECT_ID_TO_DEPLOY_TO/gorilla-clinic-repo/$_SERVICE_NAME:$COMMIT_SHA', '.']
+    wait_for: ['Build Application']
+
+  # STEP 4: Push the container image to Artifact Registry.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push Container Image'
+    args: ['push', '$_REGION-docker.pkg.dev/$_PROJECT_ID_TO_DEPLOY_TO/gorilla-clinic-repo/$_SERVICE_NAME:$COMMIT_SHA']
+    wait_for: ['Build Container Image']
+
+  # STEP 5: Deploy the new image to Cloud Run.
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'Deploy to Cloud Run'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '$_SERVICE_NAME'
+      - '--image=$_REGION-docker.pkg.dev/$_PROJECT_ID_TO_DEPLOY_TO/gorilla-clinic-repo/$_SERVICE_NAME:$COMMIT_SHA'
+      - '--region=$_REGION'
+      - '--project=$_PROJECT_ID_TO_DEPLOY_TO'
+    wait_for: ['Push Container Image']
+
+# Make the newly pushed image available for the deploy step
+images:
+  - '$_REGION-docker.pkg.dev/$_PROJECT_ID_TO_DEPLOY_TO/gorilla-clinic-repo/$_SERVICE_NAME:$COMMIT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
