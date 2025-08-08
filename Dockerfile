@@ -20,7 +20,7 @@ RUN mvn package -DskipTests
 
 # --- Stage 2: Create the final, lightweight production image ---
 # We use a slim image with just the Java Runtime Environment (JRE) for security and size.
-FROM openjdk:17-jre-slim
+FROM eclipse-temurin:17-jre-jammy
 
 # Set the working directory
 WORKDIR /app
