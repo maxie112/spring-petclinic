@@ -25,6 +25,9 @@ steps:
     entrypoint: 'mvn'
     args: ['package', '-DskipTests'] # We can skip tests here because we just ran them.
     wait_for: ['Run Unit and Integration Tests'] # Explicitly wait for tests to pass.
+    volumes:
+      - name: 'm2-cache'
+        path: '/root/.m2'
 
   # STEP 3: Build the production container image using the .jar from the previous step!
   - name: 'gcr.io/cloud-builders/docker'
