@@ -59,10 +59,6 @@ steps:
     args: ['-c', 'gsutil rsync -r /workspace/.m2 gs://gorilla-clinic-build-cache/.m2']
 
 
-# This defines the shared cache volume that our steps can use.
-volumes:
-  - name: 'm2-cache'
-    path: '/workspace/.m2'
 
 # Make the newly pushed image available for the deploy step
 images:
