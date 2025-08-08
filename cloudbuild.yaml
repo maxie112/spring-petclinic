@@ -1,35 +1,33 @@
-# cloudbuild.yaml (Production-Grade Version)#
+# cloudbuild.yaml (Corrected Version)
 
 steps:
   # STEP 0: Download the cache from GCS.
-  # We use '|| exit 0' so the build doesn't fail if the cache doesn't exist yet.
   - name: 'gcr.io/cloud-builders/gsutil'
     id: 'Restore Cache'
     entrypoint: 'bash'
     args: ['-c', 'gsutil rsync -r gs://gorilla-clinic-build-cache/.m2 /workspace/.m2 || exit 0']
 
-  # STEP 1: Run tests. This step now uses the restored cache.
+  # STEP 1: Run tests. This step uses the cache.
   - name: 'maven:3.8.5-openjdk-17'
-    id: 'Run Unit and Integration Tests'
+    id: 'Run Tests'
     entrypoint: 'mvn'
-    args: ['test', '-P', 'test']
-    # This 'volumes' mapping tells Cloud Build to mount our cached directory.
+    args: ['test'] # We removed '-P test' after fixing the pom.xml
     volumes:
       - name: 'm2-cache'
         path: '/root/.m2'
 
-  # STEP 2: Build the application into a .jar file.
-  # This step will only run if the 'test' step succeeds.
+  # STEP 2: Build the application. This step ALSO needs to use the cache.
   - name: 'maven:3.8.5-openjdk-17'
     id: 'Build Application'
     entrypoint: 'mvn'
-    args: ['package', '-DskipTests'] # We can skip tests here because we just ran them.
-    wait_for: ['Run Unit and Integration Tests'] # Explicitly wait for tests to pass.
+    args: ['package', '-DskipTests']
+    wait_for: ['Run Tests']
+    # THIS IS THE FIX: Add the volumes block here as well.
     volumes:
       - name: 'm2-cache'
         path: '/root/.m2'
 
-  # STEP 3: Build the production container image using the .jar from the previous step!
+  # STEP 3: Build the production container image.
   - name: 'gcr.io/cloud-builders/docker'
     id: 'Build Container Image'
     args: ['build', '-t', '$_REGION-docker.pkg.dev/$_PROJECT_ID_TO_DEPLOY_TO/gorilla-clinic-repo/$_SERVICE_NAME:$COMMIT_SHA', '.']
@@ -53,6 +51,18 @@ steps:
       - '--region=$_REGION'
       - '--project=$_PROJECT_ID_TO_DEPLOY_TO'
     wait_for: ['Push Container Image']
+  
+  # FINAL STEP: Upload the cache back to GCS for the next build.
+  - name: 'gcr.io/cloud-builders/gsutil'
+    id: 'Save Cache'
+    entrypoint: 'bash'
+    args: ['-c', 'gsutil rsync -r /workspace/.m2 gs://gorilla-clinic-build-cache/.m2']
+
+
+# This defines the shared cache volume that our steps can use.
+volumes:
+  - name: 'm2-cache'
+    path: '/workspace/.m2'
 
 # Make the newly pushed image available for the deploy step
 images:
