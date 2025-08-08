@@ -21,7 +21,7 @@ steps:
     id: 'Build Application'
     entrypoint: 'mvn'
     args: ['package', '-DskipTests']
-    wait_for: ['Run Tests']
+    #wait_for: ['Run Tests']
     # THIS IS THE FIX: Add the volumes block here as well.
     volumes:
       - name: 'm2-cache'
