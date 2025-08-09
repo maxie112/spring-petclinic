@@ -1,21 +1,6 @@
 # cloudbuild.yaml (Corrected Version)
 
 steps:
-  # STEP 0: Download the cache from GCS.
-  - name: 'gcr.io/cloud-builders/gsutil'
-    id: 'Restore Cache'
-    entrypoint: 'bash'
-    args: ['-c', 'gsutil rsync -r gs://gorilla-clinic-build-cache/.m2 /workspace/.m2 || exit 0']
-
-  # STEP 1: Run tests. This step uses the cache.
-#  - name: 'maven:3.8.5-openjdk-17'
-#    id: 'Run Tests'
-#    entrypoint: 'mvn'
-#    args: ['test'] # We removed '-P test' after fixing the pom.xml
-#    volumes:
-#     - name: 'm2-cache'
-#        path: '/root/.m2'
-
   # STEP 2: Build the application. This step ALSO needs to use the cache.
   - name: 'maven:3.8.5-openjdk-17'
     id: 'Build Application'
@@ -54,12 +39,6 @@ steps:
       - '--region=$_REGION'
       - '--project=$_PROJECT_ID_TO_DEPLOY_TO'
     wait_for: ['Push Container Image']
-  
-  # FINAL STEP: Upload the cache back to GCS for the next build.
-  - name: 'gcr.io/cloud-builders/gsutil'
-    id: 'Save Cache'
-    entrypoint: 'bash'
-    args: ['-c', 'gsutil rsync -r /workspace/.m2 gs://gorilla-clinic-build-cache/.m2']
 
 
 
